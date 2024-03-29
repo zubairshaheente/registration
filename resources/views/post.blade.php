@@ -21,25 +21,25 @@
         </button>
         <div class="collapse navbar-collapse justify-content-end" id="navbarSupportedContent">
           <ul class="navbar-nav ml-auto">
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <img src="" class="profile-picture" alt="">
-                <span class="nav-profile-name">{{ auth()->user()->first_name }}</span>
-              </a>
-              <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
-                <a class="dropdown-item" href="{{ route('signout') }}">
-                  <i class="mdi mdi-logout text-primary"></i>
-                  Logout
-                </a>
-              </div>
-            </li>
+              <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      <img src="" class="profile-picture" alt="">
+                      <span class="nav-profile-name"><a class="text-white" href="{{ route('editprofile') }}">{{ auth()->user()->first_name }}</a></span>
+                  </a>
+                  <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+                      <a class="dropdown-item" href="{{ route('signout') }}">
+                          <i class="mdi mdi-logout text-primary"></i>
+                          Logout
+                      </a>
+                  </div>
+              </li>
           </ul>
-        </div>
+      </div>      
     </div>
   </nav>
 
-  <div class="container mt-4">
-    <div class="row">
+  <div class="mt-4">
+    <div class="row m-2">
       <div class="col-md-3 px-0">
         <div class="card">
           <div class="card-body">
@@ -80,7 +80,7 @@
                 @endif
             </div>
             <div class="card mb-3">
-              <div class="card-body">
+              <div class="">
                 <form action="{{ route('create') }}" enctype="multipart/form-data" method="post" class="p-4 border rounded bg-light">
                     @csrf
                     <div class="form-group mb-4">
@@ -121,7 +121,7 @@
           </div>
         </div>
       </div>
-      <div class="col-md-3">
+      <div class="col-md-3 text-center">
         <div class="card">
           <div class="card-body">
             <h5 class="card-title">Ads</h5>

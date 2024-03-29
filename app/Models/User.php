@@ -8,8 +8,10 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
+// 
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens;
     use HasFactory;
@@ -18,7 +20,7 @@ class User extends Authenticatable
     use TwoFactorAuthenticatable;
 
     protected $fillable = [
-        'first_name', 'last_name', 'email', 'phn_num', 'password', 'address',
+        'first_name', 'last_name', 'email', 'phn_num', 'password', 'address', 'verification_token', 'email_verified_at',
     ];
 
     protected $hidden = [

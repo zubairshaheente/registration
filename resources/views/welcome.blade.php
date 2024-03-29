@@ -18,11 +18,7 @@
                 <div class="signup-form">
                     <h2>Sign Up</h2>
                     <form action="{{ route('indexsend') }}" method="POST">
-                      @csrf
-                              {{-- @foreach ($errors->all() as $error)
-                                  <div>{{ $error }}</div>
-                              @endforeach --}}
-                  
+                        @csrf                  
                               <div class="row">
                                   <div class="col-md-6 mb-2">
                                       <div class="form-outline">
@@ -71,9 +67,9 @@
                                     <div class="text-danger">{{ $errors->first('address') }}</div>
                                   @enderror
                               </div>
-                      <button type="submit" class="btn btn-primary btn-block mb-2"> Sign up </button>
-                      <button type="submit" class="btn btn-primary btn-block mb-2"> <a class="text-white" href="{{ route('login') }}">Login</a> </button>
-                  </form>
+                        <button type="submit" class="btn btn-primary btn-block mb-2"> Sign up </button>
+                        <button type="submit" class="btn btn-primary btn-block mb-2"> <a class="text-white" href="{{ route('login') }}">Login</a> </button>
+                    </form>
                 </div>
             </div>
         </div>

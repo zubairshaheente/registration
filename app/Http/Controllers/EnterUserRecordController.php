@@ -1,12 +1,17 @@
 <?php
 
 namespace App\Http\Controllers;
-use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Laravel\Socialite\Facades\Socialite;
-use Illuminate\Support\Facades\Auth;
+use App\Notifications\WelcomeMailNotification;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\SampleEmail;
+use Illuminate\Support\Str;
+
 
 class EnterUserRecordController extends Controller
 {
@@ -18,13 +23,38 @@ class EnterUserRecordController extends Controller
         return view('login');
     }
 
-    // public function loginview_page(){
-    //     return view('loginview');
-    // }
-
     public function post(){
         return view('post');
     }
+
+    // public function indexsend(Request $request) {
+
+    //     $validatedData = $request->validate([
+    //         'first_name' => 'required',
+    //         'last_name' => 'required',
+    //         'email' => 'required|email|lowercase|max:255|unique:'.User::class,
+    //         'phn_num' => 'required',
+    //         'address' => 'required',
+    //         'password' => 'required',
+    //     ]);
+    
+    //     $input = $request->all();
+    
+    //     $user = User::create([
+    //         'first_name' => $input['first_name'],
+    //         'last_name' => $input['last_name'],
+    //         'email' => $input['email'],
+    //         'phn_num' => $input['phn_num'],
+    //         'address' => $input['address'],
+    //         'password' => Hash::make($input['password']),
+    //     ]);
+    
+    //     // Send email to the newly created user
+    //     Mail::to($user->email)->send(new SampleEmail($user));
+    
+    //     return redirect()->route('login');
+    // }
+
 
     public function indexsend(Request $request) {
 
@@ -36,18 +66,45 @@ class EnterUserRecordController extends Controller
             'address' => 'required',
             'password' => 'required',
         ]);
-
+    
         $input = $request->all();
-        // dd($input['password']);
-        User::create([
-            'first_name' => $input['first_name'],
-            'last_name' => $input['last_name'],
-            'email' => $input['email'],
-            'phn_num' => $input['phn_num'],
-            'address' => $input['address'],
-            'password' => Hash::make($input['password']),
+    
+        // Generate a unique verification token
+        $verification_token = Str::random(60);
+
+        $user = User::create([
+            'first_name' => $request->input('first_name'),
+            'last_name' => $request->input('last_name'),
+            'email' => $request->input('email'),
+            'phn_num' => $request->input('phn_num'),
+            'address' => $request->input('address'),
+            'password' => Hash::make($request->input('password')),
+            'verification_token' => $verification_token,
         ]);
-        return redirect()->route('login');
+
+        // Send email to the user with verification link
+        Mail::to($input['email'])->send(new SampleEmail($input, $verification_token));
+        
+        // Redirect back with success message
+        return redirect()->back()->with('message', 'Please check your email to verify your account.');
+    }
+    
+    public function verify(Request $request, $token) {
+        $user = User::where('verification_token', $token)->first();
+
+    if ($user) {
+        // Update user with verified status and clear verification token
+        $user->update([
+            'email_verified_at' => now(), // Mark email as verified
+            'verification_token' => null, // Clear verification token
+        ]);
+
+        // Redirect to login page or any other page as needed
+        return redirect()->route('login')->with('success', 'Your account has been verified successfully. Please log in.');
+        } else {
+            // Redirect with error message if token is invalid or expired
+            return redirect()->route('login')->with('error', 'Invalid verification token.');
+        }       
     }
 
     public function loginsend(Request $request) {
@@ -58,17 +115,33 @@ class EnterUserRecordController extends Controller
             'password.required' => 'Your Password field is empty.',
         ]);
     
-        $credentials = $request->only('email', 'password');
-        if (Auth::attempt($credentials)) {
-            return redirect()->route('index');
-        } else {
-            return redirect()->back()->with('error', 'Invalid email or password');
-        }
-    }
+        // $credentials = $request->only('email', 'password');
+        // if (Auth::attempt($credentials)) {
+        //     return redirect()->route('index');
+        // } else {
+        //     return redirect()->back()->with('error', 'Invalid email or password');
+        // }
 
-    // public funtion loginsend(Request $request){
-        
-    // }
+        // Extract email and password from the request
+        $credentials = $request->only('email', 'password');
+
+        // Attempt to authenticate the user with the provided credentials
+        if (Auth::attempt($credentials)) {
+            // Check if the user's email is verified
+            if (auth()->user()->email_verified_at !== null) {
+                // Redirect authenticated and verified user to the index page
+                return redirect()->route('index');
+            } else {
+                // If email is not verified, log the user out and redirect back with an error message
+                Auth::logout();
+                return redirect()->back()->with('error', 'Your email address is not verified. Please verify your email to log in.');
+            }
+        } else {
+            // If authentication attempt fails, redirect back with an error message
+            return redirect()->back()->with('error', 'Invalid email or password. Please try again.');
+        }
+
+    }
     
 // Google Login
     public function googleLogin()
