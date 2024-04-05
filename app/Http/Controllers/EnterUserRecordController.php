@@ -10,6 +10,7 @@ use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\SampleEmail;
 use Illuminate\Support\Str;
+use Twilio\Rest\Client;
 
 
 class EnterUserRecordController extends Controller
@@ -60,19 +61,21 @@ class EnterUserRecordController extends Controller
 
 
     public function indexsend(Request $request) {
-
+        // dd('Twilio');
+        // Validate incoming request data
         $validatedData = $request->validate([
             'first_name' => 'required',
             'last_name' => 'required',
-            'email' => 'required|email|lowercase|max:255|unique:'.User::class,
+            'email' => 'required|email|lowercase|max:255|unique:users,email',
             'phn_num' => 'required',
             'address' => 'required',
             'password' => 'required',
         ]);
 
-        $input = $request->all();
+        // Generate a random verification token
         $verification_token = Str::random(60);
 
+        // Create a new user record
         $user = User::create([
             'first_name' => $request->input('first_name'),
             'last_name' => $request->input('last_name'),
@@ -82,10 +85,26 @@ class EnterUserRecordController extends Controller
             'password' => Hash::make($request->input('password')),
             'verification_token' => $verification_token,
         ]);
-        $user_email = $request->input('email');
 
-        Mail::to($input['email'])->send(new SampleEmail($input, $verification_token));
-        return view('resend_verify_email',compact('user_email'))->with('message', 'Please check your email to verify your account.');
+        // Send verification SMS using Twilio
+        $twilio = new Client(env('TWILIO_SID'), env('TWILIO_AUTH_TOKEN'));
+
+        $twilio->messages->create(
+            $request->input('phn_num'),
+            [
+                'from' => env('TWILIO_PHONE_NUMBER'),
+                'body' => 'Your verification code is: ' . $verification_token
+            ]
+        );
+
+        // Prepare data for email verification
+        // $user_email = $request->input('email');
+
+        // Send email verification
+        // Mail::to($user_email)->send(new SampleEmail($request->all(), $verification_token));
+
+        // Redirect the user to a view with a message
+        return view('resend_verify_email', compact('user_email'))->with('message', 'Please check your email to verify your account.');
     }
 
     public function verify(Request $request, $token) {
@@ -141,22 +160,16 @@ class EnterUserRecordController extends Controller
         //     return redirect()->back()->with('error', 'Invalid email or password');
         // }
 
-        // Extract email and password from the request
         $credentials = $request->only('email', 'password');
 
-        // Attempt to authenticate the user with the provided credentials
         if (Auth::attempt($credentials)) {
-            // Check if the user's email is verified
             if (auth()->user()->email_verified_at !== null) {
-                // Redirect authenticated and verified user to the index page
                 return redirect()->route('index');
             } else {
-                // If email is not verified, log the user out and redirect back with an error message
                 Auth::logout();
                 return redirect()->back()->with('error', 'Your email address is not verified. Please verify your email to log in.');
             }
         } else {
-            // If authentication attempt fails, redirect back with an error message
             return redirect()->back()->with('error', 'Invalid email or password. Please try again.');
         }
 

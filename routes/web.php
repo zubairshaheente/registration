@@ -5,6 +5,7 @@ use App\Http\Controllers\Verification;
 use App\Http\Controllers\EditUserRecord;
 use App\Http\Controllers\PostDataController;
 use App\http\Controllers\EnterUserRecordController;
+use App\http\Controllers\SmsController;
 
 Route::get('/index', [EnterUserRecordController::class, 'index' ])->name('index_page');
 Route::post('/login', [EnterUserRecordController::class, 'indexsend' ])->name('indexsend');
@@ -46,3 +47,4 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
 // FB
 route::get('auth/facebook', [EnterUserRecordController::class, 'facebookpage'])->name('facebook');
 route::get('auth/facebook/callback', [EnterUserRecordController::class, 'facebookredirect'])->name('facebookredirect');
+
